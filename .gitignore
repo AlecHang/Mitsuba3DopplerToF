@@ -13,6 +13,7 @@
 __pycache__
 *.pyc
 /wheelhouse
+.idea/
 
 # macOS
 \.DS_Store
