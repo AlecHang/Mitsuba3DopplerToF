@@ -18,6 +18,9 @@
 			<transform time="0">
 				<matrix value="-1 0 0 0 0 1 0 1 0 0 -1 6.8 0 0 0 1" />
 			</transform>
+			<transform time="0.015">
+				<matrix value="-1 0 0 0 0 1 0 1 0 0 -1 12.8 0 0 0 1" />
+			</transform>
 		</animation>
 		<sampler type="correlated">
 			<integer name="sample_count" value="1024" />

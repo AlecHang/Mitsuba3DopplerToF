@@ -1515,7 +1515,7 @@ std::vector<ref<Object>> load_file(const fs::path &filename,
 
     Timer timer;
     Log(Info, "Loading XML file \"%s\" with variant \"%s\"..", filename, variant);
-    std::this_thread::sleep_for(std::chrono::seconds(5));
+    std::this_thread::sleep_for(std::chrono::seconds(1));
 
     // Make a backup copy of the FileResolver, which will be restored after parsing
     ref<FileResolver> fs_backup = Thread::thread()->file_resolver();

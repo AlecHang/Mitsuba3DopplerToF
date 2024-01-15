@@ -235,6 +235,38 @@ public:
         return { ray, wav_weight };
     }
 
+//    // 定义一个函数，将 OptixInstance 转换为 Transform4f
+//    Transform4f optixInstanceToTransform(const OptixInstance &instance) {
+//        const float *T = instance.transform;
+//
+//        // 从 OptixInstance 中提取变换矩阵信息，创建 Transform4f 对象
+//        return Transform4f(
+//            T[0], T[1], T[2], T[3],
+//            T[4], T[5], T[6], T[7],
+//            T[8], T[9], T[10], T[11],
+//            0.0f, 0.0f, 0.0f, 1.0f
+//        );
+//    }
+
+//    // 将 OptixInstance 转换为 Transform4f，并存储到 field 中
+//    field<Transform4f, ScalarTransform4f> optixInstancesToTransformField(
+//        const std::vector<OptixInstance> &instances
+//    ) {
+//        // 创建 field 对象
+//        field<Transform4f, ScalarTransform4f> transformField;
+//
+//        // 遍历 OptixInstance 数组
+//        for (const OptixInstance &instance : instances) {
+//            // 将 OptixInstance 转换为 Transform4f
+//            Transform4f transform = optixInstanceToTransform(instance);
+//
+//            // 将 Transform4f 添加到 field 中
+//            //transformField.append(transform);
+//        }
+//
+//        return transformField;
+//    }
+
     std::pair<RayDifferential3f, Spectrum>
     sample_ray_differential(Float time, Float wavelength_sample, const Point2f &position_sample,
                             const Point2f & /*aperture_sample*/, Mask active) const override {
@@ -259,6 +291,48 @@ public:
 
         // Convert into a normalized ray direction; adjust the ray interval accordingly.
         Vector3f d = dr::normalize(Vector3f(near_p));
+
+        if(m_transform){
+            float start_time = m_transform->get_min_time();
+            float end_time = m_transform->get_max_time();
+
+            Float t  = dr::minimum(dr::maximum((time - start_time) / (end_time - start_time), 0.f), 1.f);
+
+            Transform4f start = m_transform->eval(start_time);
+            Transform4f end   = m_transform->eval(end_time);
+
+//            auto [M0, Q0, T0] = dr::transform_decompose(start.matrix);
+//            auto [M1, Q1, T1] = dr::transform_decompose(end.matrix);
+//            Matrix3f M = M0 * (1 - t) + M1 * t;
+//            Quaternion4f Q = dr::slerp(Q0, Q1, t);
+//            Vector3f T = T0*(1 - t) + T1 * t;
+//            auto new_m_to_world = Transform4f(dr::transform_compose<Matrix4f>(M, Q, T));
+
+            auto new_m_to_world2 = Transform4f(start.matrix * (1 - t) + end.matrix * t);
+
+            //std::cout<<"m_to_world:\n"<<typeid(m_to_world).name()<<std::endl;
+            //std::cout<<"d\n"<<typeid(d).name()<<std::endl;
+
+            ray.o = new_m_to_world2.translation();
+            ray.d = new_m_to_world2 * d;
+
+            Float inv_z = dr::rcp(d.z());
+            Float near_t = m_near_clip * inv_z,
+                  far_t  = m_far_clip * inv_z;
+            ray.o += ray.d * near_t;
+            ray.maxt = far_t - near_t;
+
+            ray.o_x = ray.o_y = ray.o;
+
+            ray.d_x = new_m_to_world2 * dr::normalize(Vector3f(near_p) + m_dx);
+            ray.d_y = new_m_to_world2 * dr::normalize(Vector3f(near_p) + m_dy);
+            ray.has_differentials = true;
+
+            return { ray, wav_weight };
+        }
+
+        //std::cout<<"m_to_world:\n"<<typeid(m_to_world).name()<<std::endl;
+        //std::cout<<"d\n"<<typeid(d).name()<<std::endl;
 
         ray.o = m_to_world.value().translation();
         ray.d = m_to_world.value() * d;
