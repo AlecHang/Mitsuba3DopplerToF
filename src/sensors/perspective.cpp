@@ -266,6 +266,9 @@ public:
 //
 //        return transformField;
 //    }
+    void f_test(Float &x) const {
+        x = x+Float(1.0001);
+    }
 
     std::pair<RayDifferential3f, Spectrum>
     sample_ray_differential(Float time, Float wavelength_sample, const Point2f &position_sample,
@@ -298,8 +301,8 @@ public:
 
             Float t  = dr::minimum(dr::maximum((time - start_time) / (end_time - start_time), 0.f), 1.f);
 
-            Transform4f start = m_transform->eval(start_time);
-            Transform4f end   = m_transform->eval(end_time);
+//            Transform4f start = m_transform->eval(start_time);
+//            Transform4f end   = m_transform->eval(end_time);
 
 //            auto [M0, Q0, T0] = dr::transform_decompose(start.matrix);
 //            auto [M1, Q1, T1] = dr::transform_decompose(end.matrix);
@@ -308,10 +311,18 @@ public:
 //            Vector3f T = T0*(1 - t) + T1 * t;
 //            auto new_m_to_world = Transform4f(dr::transform_compose<Matrix4f>(M, Q, T));
 
-            auto new_m_to_world2 = Transform4f(start.matrix * (1 - t) + end.matrix * t);
+            //auto new_m_to_world2 = Transform4f(start.matrix * (1 - t) + end.matrix * t);
+            auto new_m_to_world2 = m_transform->eval(time);
 
-            //std::cout<<"m_to_world:\n"<<typeid(m_to_world).name()<<std::endl;
-            //std::cout<<"d\n"<<typeid(d).name()<<std::endl;
+            //std::cout<<"m_to_world:\n"<<new_m_to_world2<<std::endl;
+            //std::cout<<"m_to_world 2:\n"<<new_m_to_world2.matrix + new_m_to_world2.matrix<<std::endl;
+            //auto time0 = time;
+            //f_test(time);
+            //Float ttt = dr::select(time0 > 0.001 && time0 <0.002, time0, 100.1);
+            //std::cout<<"time0:\n"<<ttt<<std::endl;
+            //dr::mask_t<Float> is_even = dr::eq(value & 1, 0.5);
+            //value = dr::select(is_even, value / 2, 3*value + 1);
+            //std::cout<<"time2:\n"<<dr::eq(ttt, ttt)<<std::endl;
 
             ray.o = new_m_to_world2.translation();
             ray.d = new_m_to_world2 * d;

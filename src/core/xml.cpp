@@ -1165,7 +1165,6 @@ static Task *instantiate_node(XMLParseContext &ctx,
         try {
             /* Convenience hack (from Mitsuba 0.5): allow passing animated transforms to arbitrary shapes
                 and then internally rewrite this into a shape group + animated instance */
-            Log(Info, "bug 1");
             if((strcmp(string::to_lower(inst.class_->name()).c_str(), "shape") == 0)
             && (strcmp(props.plugin_name().c_str(), "instance") != 0)
             && props.has_property("to_world")
@@ -1178,14 +1177,12 @@ static Task *instantiate_node(XMLParseContext &ctx,
                 props.remove_property("to_world");
                 props.set_id(tfm::format("_unnamed_%i", ctx.id_counter++).c_str());
                 inst.object = PluginManager::instance()->create_object(props, inst.class_);
-                Log(Info, "bug 2.1:%s", props);
                 
                 // create shape group
                 Properties shapeGroupProp("shapegroup");
                 shapeGroupProp.set_object("shape", inst.object);
                 shapeGroupProp.set_id(props_id);
                 auto shape_group = PluginManager::instance()->create_object(shapeGroupProp, inst.class_);
-                Log(Info, "bug 2.2:%s", shapeGroupProp);
 
                 // create instance
                 Properties instanceProp("instance");
@@ -1193,7 +1190,6 @@ static Task *instantiate_node(XMLParseContext &ctx,
                 instanceProp.set_animated_transform("to_world", trafo);
                 auto instanced_shape = PluginManager::instance()->create_object(instanceProp, inst.class_);
                 inst.object = instanced_shape;
-                Log(Info, "bug 2.3:%s", instanceProp);
 
             } else if((strcmp(string::to_lower(inst.class_->name()).c_str(), "sensor") == 0)
                        && (strcmp(props.plugin_name().c_str(), "instance") != 0)
@@ -1208,12 +1204,9 @@ static Task *instantiate_node(XMLParseContext &ctx,
                 props.set_transform("to_world", temp_to_world);
                 props.set_animated_transform("animation_transform", trafo);
 
-
-                Log(Info, "bug 4:%s \n%s", props.plugin_name().c_str(), props);
                 inst.object = PluginManager::instance()->create_object(props, inst.class_);
 
             } else{
-                Log(Info, "bug 3:%s", props);
                 inst.object = PluginManager::instance()->create_object(props, inst.class_);
             }
         } catch (const std::exception &e) {
